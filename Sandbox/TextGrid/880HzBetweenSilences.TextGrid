@@ -13,14 +13,14 @@ item []:
         xmax = 3 
         intervals: size = 3 
         intervals [1]:
-            xmin = 0 
-            xmax = 0.992 
-            text = "silent" 
+            xmin = 0
+            xmax = 1
+            text = "silent"
         intervals [2]:
-            xmin = 0.992 
-            xmax = 2.016 
-            text = "sounding" 
+            xmin = 1
+            xmax = 2
+            text = "sounding"
         intervals [3]:
-            xmin = 2.016 
-            xmax = 3 
+            xmin = 2
+            xmax = 3
             text = "silent" 

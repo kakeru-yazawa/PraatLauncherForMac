@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Office temporary/lock files
+~$*.xlsx
+~$*.xls
+~$*.docx
+~$*.doc
+~$*.pptx
+~$*.ppt
+*.tmp
+
+# Praat / editor backups
+*~
+*.bak
