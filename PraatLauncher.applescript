@@ -266,5 +266,41 @@ on error errMsg
 end try
 
 # Launch Praat
+# Start Praat first and wait until it is up. The script below is handed to a
+# running Praat, so there has to be one; letting "--send" start Praat itself
+# would leave it in whatever environment this script happens to run in.
+set praatWasRunning to (application "Praat" is running)
 tell application "Praat" to activate
-do shell script "/Applications/Praat.app/Contents/MacOS/Praat --send /tmp/tmp.praat > /dev/null 2>&1 &"
+if not praatWasRunning then
+	repeat 60 times
+		delay 0.25
+		try
+			tell application "System Events" to tell process "Praat"
+				if (count of windows) > 0 then exit repeat
+			end tell
+		end try
+	end repeat
+	delay 0.5
+end if
+
+# Hand the script over to the running Praat, by way of launchd.
+# The detour matters: as an Automator Quick Action this script is hosted by
+# com.apple.automator.runner, an XPC service with its own bootstrap namespace.
+# A Praat started directly from there does see the running Praat ("An instance
+# of Praat that is not me is already running.") but cannot reach it, and the
+# script is dropped without a word. Asking launchd to start it puts it in the
+# GUI session, where the connection works. The job deletes itself once the
+# message has been delivered, so it is not run again.
+set praatBin to "/Applications/Praat.app/Contents/MacOS/Praat"
+set sendLabel to "com.praatlauncher.send"
+set errFilePath to "/tmp/tmp.praat.log"
+set sendCommand to praatBin & " --send " & quoted form of tmpFilePath & "; launchctl remove " & sendLabel
+do shell script "rm -f " & quoted form of errFilePath & "; launchctl remove " & sendLabel & " > /dev/null 2>&1; launchctl submit -l " & sendLabel & " -o " & quoted form of errFilePath & " -e " & quoted form of errFilePath & " -- /bin/sh -c " & quoted form of sendCommand
+delay 1
+set praatMessage to ""
+try
+	set praatMessage to do shell script "grep -v 'is already running' " & quoted form of errFilePath
+end try
+if praatMessage is not "" then
+	display alert "Praat reported a problem." message praatMessage as critical
+end if
