@@ -266,22 +266,20 @@ on error errMsg
 end try
 
 # Launch Praat
-# Start Praat first and wait until it is up. The script below is handed to a
-# running Praat, so there has to be one; letting "--send" start Praat itself
-# would leave it in whatever environment this script happens to run in.
+# If Praat is not running yet, have LaunchServices start it with the script as
+# its argument. "--send" runs the script in an existing Praat when there is one
+# and otherwise becomes the GUI instance itself, running the script once its
+# windows are up -- so nothing here has to wait for Praat to be ready. (The
+# earlier approach, starting Praat and polling System Events for its windows,
+# could stall for its full 15-second timeout when that polling was refused.)
+# "open" hands the launch to LaunchServices, so the new Praat lives in the GUI
+# session whatever process happens to host this script.
 set praatWasRunning to (application "Praat" is running)
-tell application "Praat" to activate
 if not praatWasRunning then
-	repeat 60 times
-		delay 0.25
-		try
-			tell application "System Events" to tell process "Praat"
-				if (count of windows) > 0 then exit repeat
-			end tell
-		end try
-	end repeat
-	delay 0.5
+	do shell script "open -a /Applications/Praat.app --args --send " & quoted form of tmpFilePath
+	return
 end if
+tell application "Praat" to activate
 
 # Hand the script over to the running Praat, by way of launchd.
 # The detour matters: as an Automator Quick Action this script is hosted by
